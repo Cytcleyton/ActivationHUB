@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salons</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">✓</span> Salon onboarding</a>
+      <span class="role-badge">Onboarding team</span>
+      <span class="spacer"></span>
+      <a class="btn primary" href="/new-salon.html">+ Add salon</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <h1>Salons</h1>
+        <div class="muted" id="count">Loading…</div>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="row head"><span>Salon</span><span>Added</span></div>
+      <div id="rows"></div>
+    </section>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/salons.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add salon</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">✓</span> Salon onboarding</a>
+      <span class="role-badge">Onboarding team</span>
+    </div>
+  </header>
+
+  <main class="page narrow-page">
+    <a class="back" href="/salons.html">← Salons</a>
+    <h1>Add a salon</h1>
+
+    <form class="card card-pad" id="new-salon-form" novalidate>
+      <div class="field">
+        <label for="salon-name">Salon name</label>
+        <input id="salon-name" name="name" maxlength="120" autocomplete="off" placeholder="Willow Hair Studio" autofocus>
+        <div class="field-error" id="name-error" hidden></div>
+      </div>
+      <div class="form-actions">
+        <a class="btn" href="/salons.html">Cancel</a>
+        <button class="primary" type="submit" id="create">Create</button>
+      </div>
+    </form>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script>
+    (() => {
+      const form = document.getElementById('new-salon-form');
+      const name = document.getElementById('salon-name');
+      const error = document.getElementById('name-error');
+
+      function showError(message) {
+        error.textContent = message;
+        error.hidden = false;
+        name.focus();
+      }
+
+      name.addEventListener('input', () => { error.hidden = true; });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!name.value.trim()) {
+          showError("Enter the salon's name.");
+          return;
+        }
+        try {
+          await App.busy(document.getElementById('create'),
+            () => App.api('POST', '/api/salons', { name: name.value.trim() }));
+          window.location.href = '/salons.html';
+        } catch (err) {
+          showError(err.message);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
