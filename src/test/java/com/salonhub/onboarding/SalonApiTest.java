@@ -1,11 +1,13 @@
 package com.salonhub.onboarding;
 
+import com.salonhub.onboarding.repo.SalonFeatureRepository;
+import com.salonhub.onboarding.repo.SalonRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -18,11 +20,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:salontest")
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class SalonApiTest {
 
     @Autowired
     MockMvc mvc;
+
+    @Autowired
+    SalonRepository salons;
+
+    @Autowired
+    SalonFeatureRepository features;
+
+    @BeforeEach
+    void cleanDatabase() {
+        features.deleteAll();
+        salons.deleteAll();
+    }
 
     @Test
     void addedSalonAppearsInTheList() throws Exception {
@@ -34,7 +47,8 @@ class SalonApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.salons", hasSize(1)))
                 .andExpect(jsonPath("$.salons[0].name").value("Willow Hair Studio"))
-                .andExpect(jsonPath("$.salons[0].createdAt").exists());
+                .andExpect(jsonPath("$.salons[0].createdAt").exists())
+                .andExpect(jsonPath("$.salons[0].features", hasSize(0)));
     }
 
     @Test

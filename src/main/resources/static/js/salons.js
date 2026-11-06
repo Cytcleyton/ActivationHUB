@@ -1,5 +1,5 @@
 (() => {
-  const { api, escapeHtml, formatDate, toast } = App;
+  const { api, escapeHtml, formatDate, toast, toneClass } = App;
   const rowsEl = document.getElementById('rows');
   const countEl = document.getElementById('count');
 
@@ -12,12 +12,26 @@
   }
 
   function row(salon) {
+    const chips = salon.features.length
+      ? salon.features.map((f) => `
+          <span class="feature-chip">
+            <span>${escapeHtml(f.label)}</span>
+            <span class="pill ${toneClass(f.statusTone)}" title="${escapeHtml(f.statusLabel)}">${escapeHtml(f.statusLabel)}</span>
+          </span>`).join('')
+      : '<span class="faint">No features yet</span>';
     return `
-      <div class="row">
-        <span class="name">${escapeHtml(salon.name)}</span>
+      <div class="row clickable" data-href="/salon.html?id=${salon.id}">
+        <a class="name" href="/salon.html?id=${salon.id}">${escapeHtml(salon.name)}</a>
+        <div class="feature-chips">${chips}</div>
         <span class="muted">${escapeHtml(formatDate(salon.createdAt))}</span>
       </div>`;
   }
+
+  // The whole row opens the salon, not just its name.
+  rowsEl.addEventListener('click', (e) => {
+    const row = e.target.closest('.row[data-href]');
+    if (row && !e.target.closest('a')) window.location.href = row.dataset.href;
+  });
 
   load().catch((err) => {
     countEl.textContent = 'Couldn’t load salons';

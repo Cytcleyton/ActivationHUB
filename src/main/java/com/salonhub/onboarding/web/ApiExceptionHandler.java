@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -18,6 +19,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException e) {
         return error(400, "The request body isn't valid JSON.");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> badPathValue(MethodArgumentTypeMismatchException e) {
+        return error(400, "Invalid " + e.getName() + ": " + e.getValue());
     }
 
     private static ResponseEntity<ErrorResponse> error(int status, String message) {

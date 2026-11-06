@@ -53,9 +53,9 @@
           return;
         }
         try {
-          await App.busy(document.getElementById('create'),
+          const salon = await App.busy(document.getElementById('create'),
             () => App.api('POST', '/api/salons', { name: name.value.trim() }));
-          window.location.href = '/salons.html';
+          window.location.href = `/salon.html?id=${salon.id}`;
         } catch (err) {
           showError(err.message);
         }

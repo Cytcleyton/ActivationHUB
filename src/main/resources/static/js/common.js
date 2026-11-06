@@ -48,6 +48,31 @@ const App = (() => {
     setTimeout(() => el.remove(), kind === 'error' ? 9000 : 5000);
   }
 
+  function toneClass(tone) {
+    return ['done', 'waiting', 'problem', 'neutral'].includes(tone) ? tone : 'neutral';
+  }
+
+  // Resolves to true if the user confirms, false if they cancel or press Esc.
+  function confirmDialog(title, message, confirmLabel = 'Confirm', danger = false) {
+    return new Promise((resolve) => {
+      const dialog = document.createElement('dialog');
+      dialog.innerHTML = `
+        <form method="dialog">
+          <div class="dialog-body"><h2>${escapeHtml(title)}</h2><p class="muted">${escapeHtml(message)}</p></div>
+          <div class="dialog-actions">
+            <button value="no">Cancel</button>
+            <button value="yes" class="${danger ? 'danger' : 'primary'}">${escapeHtml(confirmLabel)}</button>
+          </div>
+        </form>`;
+      document.body.appendChild(dialog);
+      dialog.addEventListener('close', () => {
+        resolve(dialog.returnValue === 'yes');
+        dialog.remove();
+      });
+      dialog.showModal();
+    });
+  }
+
   async function busy(button, action) {
     const original = button.innerHTML;
     button.disabled = true;
@@ -60,5 +85,5 @@ const App = (() => {
     }
   }
 
-  return { api, escapeHtml, formatDate, toast, busy };
+  return { api, escapeHtml, formatDate, toast, busy, toneClass, confirmDialog };
 })();
