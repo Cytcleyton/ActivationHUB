@@ -15,7 +15,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:salontest")
@@ -73,11 +72,6 @@ class SalonApiTest {
     @Test
     void tooLongNameIsRejected() throws Exception {
         createSalon("x".repeat(121)).andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void homeRedirectsToSalons() throws Exception {
-        mvc.perform(get("/")).andExpect(redirectedUrl("/salons.html"));
     }
 
     private ResultActions createSalon(String name) throws Exception {

@@ -42,6 +42,12 @@ h1 { font-size: 22px; }
 .topbar-inner { display: flex; align-items: center; gap: 16px; min-height: 60px; flex-wrap: wrap; }
 .topbar .spacer { flex: 1; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text); text-decoration: none; }
+.topnav { display: flex; gap: 4px; }
+.topnav a {
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  color: var(--text-2); text-decoration: none; font-weight: 500;
+}
+.topnav a:hover, .topnav a.active { background: var(--surface-2); color: var(--text); }
 .brand-mark {
   width: 28px; height: 28px; border-radius: 8px;
   background: var(--accent); color: #fff;
@@ -74,11 +80,17 @@ button.primary:hover, .btn.primary:hover { background: var(--accent-hover); }
 button.danger { color: var(--bad-fg); }
 button.danger:hover { background: var(--bad-bg); }
 
-input {
+input, select {
   font: inherit; color: var(--text); background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px;
 }
-input:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.toolbar-pad { padding-bottom: 12px; }
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.search { position: relative; flex: 1 1 260px; margin: 0; font-weight: 400; }
+.search input { width: 100%; padding-left: 32px; }
+.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); }
 label { display: block; font-weight: 500; margin-bottom: 4px; }
 .field { margin-bottom: 14px; }
 .field input { width: 100%; }
@@ -148,7 +160,10 @@ label { display: block; font-weight: 500; margin-bottom: 4px; }
 .row.clickable:hover .name { text-decoration: underline; }
 .empty { padding: 40px 16px; text-align: center; color: var(--text-2); }
 
+.row .cell-label { display: none; }
 .salons-table .row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 2.4fr) 160px; }
+.overview .row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr) 160px; }
+.overview .row.head { border-radius: 0; border-top: 1px solid var(--border); }
 .feature-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .feature-chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -194,8 +209,10 @@ dialog::backdrop { background: rgba(31, 29, 26, .35); }
 
 @media (max-width: 600px) {
   .topbar-inner, .page { padding-left: 16px; padding-right: 16px; }
-  .row, .salons-table .row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .row, .salons-table .row, .overview .row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .row.head { display: none; }
+  .row .cell-label { display: block; font-size: 11px; color: var(--text-3); }
+  .toolbar select { flex: 1 1 0; min-width: 0; }
   .feature-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .step-actions { justify-content: flex-start; }
 }

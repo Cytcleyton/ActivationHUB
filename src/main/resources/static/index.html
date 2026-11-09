@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Features overview</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">✓</span> Salon onboarding</a>
+      <span class="role-badge">Onboarding team</span>
+      <nav class="topnav" aria-label="Main"><a class="active" aria-current="page" href="/">Features</a><a href="/salons.html">Salons</a></nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <h1>Features overview</h1>
+        <div class="muted" id="count">Loading…</div>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-pad toolbar-pad">
+        <div class="toolbar">
+          <label class="search" for="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search" type="search" placeholder="Filter by salon name" aria-label="Filter by salon name" autocomplete="off">
+          </label>
+          <select id="feature" aria-label="Feature">
+            <option value="" selected>All features</option>
+            <option value="WHATSAPP_REMINDERS">WhatsApp reminders</option>
+            <option value="BRANDED_APP">Salon branded app</option>
+            <option value="ADS_MANAGER">Facebook Ads Manager</option>
+          </select>
+          <select id="sort" aria-label="Sort">
+            <option value="newest" selected>Newest first</option>
+            <option value="name">Name</option>
+          </select>
+        </div>
+      </div>
+      <div class="overview">
+        <div class="row head"><span>Salon</span><span>Feature</span><span>Status</span><span>Added</span></div>
+        <div id="rows"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

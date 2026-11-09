@@ -28,6 +28,14 @@ public final class Dtos {
     public record SalonDetail(long id, String name, Instant createdAt, List<FeatureView> features) {
     }
 
+    // One row per feature added to a salon.
+    public record OverviewRow(long salonId, String salonName, String featureType, String featureLabel,
+                              String statusLabel, String statusTone, Instant addedAt) {
+    }
+
+    public record Overview(List<OverviewRow> rows) {
+    }
+
     public record ErrorResponse(int status, String message) {
     }
 }
