@@ -1,44 +1,16 @@
 package com.salonhub.onboarding;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.salonhub.onboarding.repo.SalonFeatureRepository;
-import com.salonhub.onboarding.repo.SalonRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Duration;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:salontest")
-@AutoConfigureMockMvc
-class OverviewTest {
-
-    @Autowired
-    MockMvc mvc;
-
-    @Autowired
-    ObjectMapper json;
-
-    @Autowired
-    SalonRepository salons;
-
-    @Autowired
-    SalonFeatureRepository features;
-
-    @BeforeEach
-    void cleanDatabase() {
-        features.deleteAll();
-        salons.deleteAll();
-    }
+class OverviewTest extends ApiTestBase {
 
     @Test
     void salonWithoutFeaturesHasNoRows() throws Exception {
@@ -82,20 +54,46 @@ class OverviewTest {
     }
 
     @Test
+    void whatsAppRowShowsStageAndWhoItsWaitingOn() throws Exception {
+        long id = createSalon("Willow Hair Studio");
+        addFeature(id, "WHATSAPP_REMINDERS");
+        addFeature(id, "BRANDED_APP");
+
+        mvc.perform(get("/api/overview"))
+                .andExpect(jsonPath("$.rows[1].stage").value("NOT_STARTED"))
+                .andExpect(jsonPath("$.rows[1].waitingOn").value("Salon"))
+                .andExpect(jsonPath("$.rows[1].stalled").value(false))
+                .andExpect(jsonPath("$.rows[1].timeInStage").value("under a minute"))
+                .andExpect(jsonPath("$.rows[0].stage").doesNotExist())
+                .andExpect(jsonPath("$.rows[0].waitingOn").doesNotExist());
+    }
+
+    @Test
+    void salonGoesStalledAfterThreeDaysWithoutConnecting() throws Exception {
+        long id = createSalon("Willow Hair Studio");
+        addFeature(id, "WHATSAPP_REMINDERS");
+        moveStageStartBack(id, Duration.ofDays(3).plusHours(1));
+
+        mvc.perform(get("/api/overview"))
+                .andExpect(jsonPath("$.rows[0].stalled").value(true))
+                .andExpect(jsonPath("$.rows[0].timeInStage").value("3d 1h"))
+                .andExpect(jsonPath("$.stats.stalled").value(1));
+    }
+
+    @Test
+    void statsCountOnboardingStalledAndLive() throws Exception {
+        long id = createSalon("Willow Hair Studio");
+        addFeature(id, "WHATSAPP_REMINDERS");
+        addFeature(id, "BRANDED_APP");
+
+        mvc.perform(get("/api/overview"))
+                .andExpect(jsonPath("$.stats.onboarding").value(1))
+                .andExpect(jsonPath("$.stats.stalled").value(0))
+                .andExpect(jsonPath("$.stats.live").value(1));
+    }
+
+    @Test
     void homeShowsTheOverview() throws Exception {
         mvc.perform(get("/")).andExpect(forwardedUrl("/index.html"));
-    }
-
-    private long createSalon(String name) throws Exception {
-        String body = mvc.perform(post("/api/salons")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"" + name + "\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return json.readTree(body).get("id").asLong();
-    }
-
-    private void addFeature(long salonId, String type) throws Exception {
-        mvc.perform(post("/api/salons/" + salonId + "/features/" + type)).andExpect(status().isOk());
     }
 }

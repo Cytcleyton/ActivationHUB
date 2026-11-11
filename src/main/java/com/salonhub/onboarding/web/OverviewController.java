@@ -9,13 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class OverviewController {
 
     private final OnboardingService service;
+    private final SalonViews views;
 
-    public OverviewController(OnboardingService service) {
+    public OverviewController(OnboardingService service, SalonViews views) {
         this.service = service;
+        this.views = views;
     }
 
     @GetMapping("/api/overview")
     public Overview overview() {
-        return SalonViews.overview(service.listSalons(), service.featuresBySalon());
+        return views.overview(service.listSalons(), service.featuresBySalon());
     }
 }

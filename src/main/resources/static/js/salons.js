@@ -21,7 +21,7 @@
       : '<span class="faint">No features yet</span>';
     return `
       <div class="row clickable" data-href="/salon.html?id=${salon.id}">
-        <a class="name" href="/salon.html?id=${salon.id}">${escapeHtml(salon.name)}</a>
+        <div><a class="name" href="/salon.html?id=${salon.id}">${escapeHtml(salon.name)}</a>${salon.demo ? ' <span class="tag">DEMO</span>' : ''}</div>
         <div><span class="cell-label">Features</span><div class="feature-chips">${chips}</div></div>
         <div><span class="cell-label">Added</span><span class="muted">${escapeHtml(formatDate(salon.createdAt))}</span></div>
       </div>`;

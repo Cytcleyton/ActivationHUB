@@ -25,23 +25,25 @@ import java.util.Map;
 public class SalonController {
 
     private final OnboardingService service;
+    private final SalonViews views;
 
-    public SalonController(OnboardingService service) {
+    public SalonController(OnboardingService service, SalonViews views) {
         this.service = service;
+        this.views = views;
     }
 
     @GetMapping
     public SalonList list() {
         Map<Long, List<SalonFeature>> features = service.featuresBySalon();
         return new SalonList(service.listSalons().stream()
-                .map(s -> SalonViews.summary(s, features.getOrDefault(s.getId(), List.of())))
+                .map(s -> views.summary(s, features.getOrDefault(s.getId(), List.of())))
                 .toList());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SalonSummary create(@RequestBody CreateSalonRequest request) {
-        return SalonViews.summary(service.createSalon(request.name()), List.of());
+        return views.summary(service.createSalon(request.name()), List.of());
     }
 
     @GetMapping("/{id}")
@@ -63,6 +65,6 @@ public class SalonController {
 
     private SalonDetail detail(long id) {
         Salon salon = service.getSalon(id);
-        return SalonViews.detail(salon, service.featuresOf(id));
+        return views.detail(salon, service.featuresOf(id));
     }
 }

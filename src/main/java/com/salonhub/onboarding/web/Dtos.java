@@ -15,7 +15,7 @@ public final class Dtos {
     public record FeatureChip(String type, String label, String statusLabel, String statusTone) {
     }
 
-    public record SalonSummary(long id, String name, Instant createdAt, List<FeatureChip> features) {
+    public record SalonSummary(long id, String name, boolean demo, Instant createdAt, List<FeatureChip> features) {
     }
 
     public record SalonList(List<SalonSummary> salons) {
@@ -25,15 +25,21 @@ public final class Dtos {
                               boolean added, Instant addedAt, String statusLabel, String statusTone) {
     }
 
-    public record SalonDetail(long id, String name, Instant createdAt, List<FeatureView> features) {
+    public record SalonDetail(long id, String name, boolean demo, String city, String contactName,
+                              Instant createdAt, List<FeatureView> features) {
     }
 
-    // One row per feature added to a salon.
-    public record OverviewRow(long salonId, String salonName, String featureType, String featureLabel,
-                              String statusLabel, String statusTone, Instant addedAt) {
+    // One row per feature added to a salon. stage, waitingOn and timeInStage are only set for WhatsApp reminders.
+    public record OverviewRow(long salonId, String salonName, boolean demo, String city, String contactName,
+                              String featureType, String featureLabel, String statusLabel, String statusTone,
+                              String stage, String waitingOn, boolean stalled, String timeInStage,
+                              long secondsInStage, Instant addedAt) {
     }
 
-    public record Overview(List<OverviewRow> rows) {
+    public record OverviewStats(long onboarding, long stalled, long live) {
+    }
+
+    public record Overview(List<OverviewRow> rows, OverviewStats stats) {
     }
 
     public record ErrorResponse(int status, String message) {

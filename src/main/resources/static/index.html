@@ -17,11 +17,10 @@
 
   <main class="page">
     <div class="page-head">
-      <div>
-        <h1>Features overview</h1>
-        <div class="muted" id="count">Loading…</div>
-      </div>
+      <h1>Features overview</h1>
     </div>
+
+    <div class="stats" id="stats"></div>
 
     <section class="card">
       <div class="card-pad toolbar-pad">
@@ -38,12 +37,15 @@
           </select>
           <select id="sort" aria-label="Sort">
             <option value="newest" selected>Newest first</option>
+            <option value="stalled">Stalled first</option>
+            <option value="longest">Longest in stage</option>
             <option value="name">Name</option>
           </select>
         </div>
+        <div class="chips" id="chips" role="group" aria-label="Filter"></div>
       </div>
       <div class="overview">
-        <div class="row head"><span>Salon</span><span>Feature</span><span>Status</span><span>Added</span></div>
+        <div class="row head"><span>Salon</span><span>Feature</span><span>Stage · waiting on</span><span>In stage</span><span>Added</span></div>
         <div id="rows"></div>
       </div>
     </section>

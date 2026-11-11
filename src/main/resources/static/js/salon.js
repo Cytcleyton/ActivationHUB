@@ -5,10 +5,11 @@
 
   function render(salon) {
     document.title = salon.name;
+    const sub = [salon.city, salon.contactName && `Contact: ${salon.contactName}`].filter(Boolean).join(' · ');
     content.innerHTML = `
       <div class="salon-head">
-        <h1>${escapeHtml(salon.name)}</h1>
-        <div class="meta-line muted">Added ${escapeHtml(formatDate(salon.createdAt))}</div>
+        <h1>${escapeHtml(salon.name)} ${salon.demo ? '<span class="tag">DEMO</span>' : ''}</h1>
+        <div class="meta-line muted">${sub ? `${escapeHtml(sub)} · ` : ''}Added ${escapeHtml(formatDate(salon.createdAt))}</div>
       </div>
       ${featuresCard(salon)}
       <section class="card card-pad danger-zone">

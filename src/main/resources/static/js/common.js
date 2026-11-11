@@ -48,6 +48,10 @@ const App = (() => {
     setTimeout(() => el.remove(), kind === 'error' ? 9000 : 5000);
   }
 
+  function waitingText(waitingOn) {
+    return `Waiting on ${waitingOn === 'Meta' ? 'Meta' : String(waitingOn).toLowerCase()}`;
+  }
+
   function toneClass(tone) {
     return ['done', 'waiting', 'problem', 'neutral'].includes(tone) ? tone : 'neutral';
   }
@@ -85,5 +89,5 @@ const App = (() => {
     }
   }
 
-  return { api, escapeHtml, formatDate, toast, busy, toneClass, confirmDialog };
+  return { api, escapeHtml, formatDate, toast, busy, toneClass, confirmDialog, waitingText };
 })();

@@ -161,8 +161,28 @@ label { display: block; font-weight: 500; margin-bottom: 4px; }
 .empty { padding: 40px 16px; text-align: center; color: var(--text-2); }
 
 .row .cell-label { display: none; }
+.row .sub { font-size: 12.5px; color: var(--text-2); }
 .salons-table .row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 2.4fr) 160px; }
-.overview .row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr) 160px; }
+.overview .row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.4fr) 100px 180px; }
+.row.stalled { background: #fdf1ef; box-shadow: inset 4px 0 0 var(--bad-fg); }
+.row.stalled.clickable:hover { background: #fbe6e2; }
+.stalled-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--bad-fg); }
+.stalled-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--bad-fg); }
+.stalled-time { font-size: 12px; color: var(--bad-fg); margin-top: 2px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stats .card + .card { margin-top: 0; }
+.stat { display: block; width: 100%; padding: 14px 16px; text-align: left; font-weight: 400; white-space: normal; }
+.stat:hover { background: var(--surface); border-color: var(--text-3); }
+.stat .stat-label { color: var(--text-2); font-size: 13px; }
+.stat .stat-value { font-size: 26px; font-weight: 600; line-height: 1.2; }
+.stat.bad .stat-value { color: var(--bad-fg); }
+.stat.good .stat-value { color: var(--done-fg); }
+.stat.active { outline: 2px solid var(--accent); }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.chip { font-size: 12.5px; padding: 5px 11px; border-radius: 999px; }
+.chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .overview .row.head { border-radius: 0; border-top: 1px solid var(--border); }
 .feature-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .feature-chip {
@@ -212,7 +232,11 @@ dialog::backdrop { background: rgba(31, 29, 26, .35); }
   .row, .salons-table .row, .overview .row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .row.head { display: none; }
   .row .cell-label { display: block; font-size: 11px; color: var(--text-3); }
+  .search { flex-basis: 100%; }
   .toolbar select { flex: 1 1 0; min-width: 0; }
+  .stats { gap: 8px; }
+  .stat { padding: 10px 12px; }
+  .stat .stat-value { font-size: 22px; }
   .feature-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .step-actions { justify-content: flex-start; }
 }
