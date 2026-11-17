@@ -65,6 +65,6 @@ public class SalonController {
 
     private SalonDetail detail(long id) {
         Salon salon = service.getSalon(id);
-        return views.detail(salon, service.featuresOf(id));
+        return views.detail(salon, service.featuresOf(id), service.eventsOf(id));
     }
 }

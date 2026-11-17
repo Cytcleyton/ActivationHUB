@@ -11,6 +11,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.empty;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -51,6 +54,18 @@ class DemoDataTest {
                 .andExpect(jsonPath("$.city").value("Leeds"))
                 .andExpect(jsonPath("$.features[0].statusLabel").value("Abandoned Meta signup"))
                 .andExpect(jsonPath("$.features[0].statusTone").value("problem"));
+    }
+
+    @Test
+    void demoSalonPageShowsNextStepAndHistory() throws Exception {
+        Salon bloom = salons.findAll().stream()
+                .filter(s -> s.getName().equals("Bloom Beauty")).findFirst().orElseThrow();
+
+        mvc.perform(get("/api/salons/" + bloom.getId()))
+                .andExpect(jsonPath("$.whatsapp.stage").value("SIGNUP_ABANDONED"))
+                .andExpect(jsonPath("$.whatsapp.abandonedAt").value("phone number verification"))
+                .andExpect(jsonPath("$.whatsapp.nextAction").value(containsString("phone number verification screen")))
+                .andExpect(jsonPath("$.events", not(empty())));
     }
 
     @Test

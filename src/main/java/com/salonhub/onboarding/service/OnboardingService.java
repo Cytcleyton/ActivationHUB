@@ -1,10 +1,13 @@
 package com.salonhub.onboarding.service;
 
 import com.salonhub.onboarding.domain.FeatureType;
+import com.salonhub.onboarding.domain.OnboardingEvent;
+import com.salonhub.onboarding.domain.OnboardingEvent.Type;
 import com.salonhub.onboarding.domain.OnboardingStage;
 import com.salonhub.onboarding.domain.Salon;
 import com.salonhub.onboarding.domain.SalonFeature;
 import com.salonhub.onboarding.domain.StageCalculator;
+import com.salonhub.onboarding.repo.OnboardingEventRepository;
 import com.salonhub.onboarding.repo.SalonFeatureRepository;
 import com.salonhub.onboarding.repo.SalonRepository;
 import org.springframework.stereotype.Service;
@@ -22,11 +25,14 @@ public class OnboardingService {
 
     private final SalonRepository salons;
     private final SalonFeatureRepository features;
+    private final OnboardingEventRepository events;
     private final Clock clock;
 
-    public OnboardingService(SalonRepository salons, SalonFeatureRepository features, Clock clock) {
+    public OnboardingService(SalonRepository salons, SalonFeatureRepository features,
+                             OnboardingEventRepository events, Clock clock) {
         this.salons = salons;
         this.features = features;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -49,11 +55,14 @@ public class OnboardingService {
             throw OnboardingException.badRequest(
                     "The salon's name can be at most " + Salon.MAX_NAME_LENGTH + " characters.");
         }
-        return salons.save(new Salon(trimmed, clock.instant()));
+        Salon salon = salons.save(new Salon(trimmed, clock.instant()));
+        log(salon, Type.SALON_CREATED, "Salon added");
+        return salon;
     }
 
     public void deleteSalon(long id) {
         Salon salon = getSalon(id);
+        events.deleteBySalonId(salon.getId());
         features.deleteBySalonId(salon.getId());
         salons.delete(salon);
     }
@@ -69,6 +78,11 @@ public class OnboardingService {
                 .collect(Collectors.groupingBy(SalonFeature::getSalonId));
     }
 
+    @Transactional(readOnly = true)
+    public List<OnboardingEvent> eventsOf(long salonId) {
+        return events.findBySalonIdOrderByOccurredAtDescIdDesc(salonId);
+    }
+
     // Adding a feature the salon already has does nothing.
     public void addFeature(long salonId, String type) {
         Salon salon = getSalon(salonId);
@@ -82,16 +96,25 @@ public class OnboardingService {
         if (featureType == FeatureType.WHATSAPP_REMINDERS) {
             // Onboarding starts now, so time in stage counts from here.
             salon.setStageSince(now);
+            log(salon, Type.FEATURE_ADDED, featureType.label() + " added: waiting for the salon to connect WhatsApp");
             updateStage(salon);
+        } else {
+            log(salon, Type.FEATURE_ADDED, featureType.label() + " added (demo only: live straight away)");
         }
     }
 
     // Call after anything that could move the salon to another stage.
     void updateStage(Salon salon) {
         OnboardingStage next = StageCalculator.calculate(salon.stageInputs());
-        if (next != salon.getStage()) {
+        OnboardingStage current = salon.getStage();
+        if (next != current) {
             salon.setStage(next);
             salon.setStageSince(clock.instant());
+            log(salon, Type.STAGE_CHANGED, current.label() + " → " + next.label());
         }
+    }
+
+    private void log(Salon salon, Type type, String detail) {
+        events.save(new OnboardingEvent(salon.getId(), clock.instant(), type, detail));
     }
 }

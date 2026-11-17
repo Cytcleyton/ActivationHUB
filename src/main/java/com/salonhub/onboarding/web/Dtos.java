@@ -25,8 +25,20 @@ public final class Dtos {
                               boolean added, Instant addedAt, String statusLabel, String statusTone) {
     }
 
+    // The WhatsApp reminders onboarding, shown on the salon page once the feature is added.
+    public record WhatsAppView(String stage, String stageLabel, String stageTone, String waitingOn,
+                               boolean stalled, String timeInStage, String stalledAfter, String nextAction,
+                               String signupState, String abandonedAt, String signupError,
+                               boolean connected, boolean phoneConnected,
+                               String verificationLabel, String verificationTone) {
+    }
+
+    public record EventView(Instant at, String type, String detail) {
+    }
+
     public record SalonDetail(long id, String name, boolean demo, String city, String contactName,
-                              Instant createdAt, List<FeatureView> features) {
+                              Instant createdAt, List<FeatureView> features, WhatsAppView whatsapp,
+                              List<EventView> events) {
     }
 
     // One row per feature added to a salon. stage, waitingOn and timeInStage are only set for WhatsApp reminders.

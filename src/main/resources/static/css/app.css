@@ -183,6 +183,40 @@ label { display: block; font-weight: 500; margin-bottom: 4px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .chip { font-size: 12.5px; padding: 5px 11px; border-radius: 999px; }
 .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+.section-head { margin: 28px 0 14px; }
+.section-head h2 { font-size: 18px; }
+.section-head .meta-line { margin-top: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.callout {
+  display: flex; gap: 12px; padding: 14px 16px; margin-bottom: 16px;
+  border-radius: var(--radius); background: var(--accent-soft); border: 1px solid #c9dcd5;
+}
+.callout.problem { background: var(--bad-bg); border-color: #f1c2bb; }
+.callout.waiting { background: #fdf6e6; border-color: #f0dcae; }
+.callout-title { font-weight: 600; margin-bottom: 2px; }
+
+.steps { list-style: none; margin: 0; padding: 0; }
+.step {
+  display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 14px; align-items: start;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 600; font-size: 13px;
+  background: var(--none-bg); color: var(--none-fg);
+}
+.step.done .step-num { background: var(--done-bg); color: var(--done-fg); }
+.step.current .step-num { background: var(--accent); color: #fff; }
+.step.problem .step-num { background: var(--bad-bg); color: var(--bad-fg); }
+
+.activity { list-style: none; margin: 0; padding: 0; }
+.activity li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.activity li:last-child { border-bottom: none; }
+.activity .when { color: var(--text-3); font-size: 12.5px; }
+.activity .what { overflow-wrap: anywhere; }
+.activity .type { font-size: 10.5px; font-weight: 600; color: var(--text-3); letter-spacing: .03em; margin-right: 6px; }
 .overview .row.head { border-radius: 0; border-top: 1px solid var(--border); }
 .feature-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .feature-chip {
@@ -237,6 +271,7 @@ dialog::backdrop { background: rgba(31, 29, 26, .35); }
   .stats { gap: 8px; }
   .stat { padding: 10px 12px; }
   .stat .stat-value { font-size: 22px; }
+  .activity li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .feature-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .step-actions { justify-content: flex-start; }
 }

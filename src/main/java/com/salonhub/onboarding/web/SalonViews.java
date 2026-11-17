@@ -1,10 +1,15 @@
 package com.salonhub.onboarding.web;
 
 import com.salonhub.onboarding.domain.FeatureType;
+import com.salonhub.onboarding.domain.NextActions;
+import com.salonhub.onboarding.domain.OnboardingEvent;
 import com.salonhub.onboarding.domain.OnboardingStage;
 import com.salonhub.onboarding.domain.Salon;
 import com.salonhub.onboarding.domain.SalonFeature;
+import com.salonhub.onboarding.domain.SignupState;
+import com.salonhub.onboarding.domain.StageCalculator;
 import com.salonhub.onboarding.domain.StallPolicy;
+import com.salonhub.onboarding.web.Dtos.EventView;
 import com.salonhub.onboarding.web.Dtos.FeatureChip;
 import com.salonhub.onboarding.web.Dtos.FeatureView;
 import com.salonhub.onboarding.web.Dtos.Overview;
@@ -12,6 +17,7 @@ import com.salonhub.onboarding.web.Dtos.OverviewRow;
 import com.salonhub.onboarding.web.Dtos.OverviewStats;
 import com.salonhub.onboarding.web.Dtos.SalonDetail;
 import com.salonhub.onboarding.web.Dtos.SalonSummary;
+import com.salonhub.onboarding.web.Dtos.WhatsAppView;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -61,7 +67,7 @@ class SalonViews {
     }
 
     // Lists every feature type, so the page can offer "Add" for the ones not added yet.
-    SalonDetail detail(Salon salon, List<SalonFeature> features) {
+    SalonDetail detail(Salon salon, List<SalonFeature> features, List<OnboardingEvent> events) {
         Instant now = clock.instant();
         Map<FeatureType, SalonFeature> added = features.stream()
                 .collect(Collectors.toMap(SalonFeature::getType, Function.identity()));
@@ -74,8 +80,42 @@ class SalonViews {
                             s == null ? null : s.label(), s == null ? null : s.tone());
                 })
                 .toList();
+        WhatsAppView whatsapp = added.containsKey(FeatureType.WHATSAPP_REMINDERS) ? whatsapp(salon, now) : null;
+        List<EventView> log = events.stream()
+                .map(e -> new EventView(e.getOccurredAt(), e.getType().name(), e.getDetail()))
+                .toList();
         return new SalonDetail(salon.getId(), salon.getName(), salon.isDemo(), salon.getCity(),
-                salon.getContactName(), salon.getCreatedAt(), views);
+                salon.getContactName(), salon.getCreatedAt(), views, whatsapp, log);
+    }
+
+    private WhatsAppView whatsapp(Salon salon, Instant now) {
+        OnboardingStage stage = salon.getStage();
+        StallPolicy.Assessment a = stallPolicy.assess(stage, salon.getStageSince(), now);
+        boolean connected = salon.getSignupState() == SignupState.FINISHED && salon.hasToken() && salon.getWabaId() != null;
+        boolean phoneConnected = connected
+                && StageCalculator.isPhoneConnected(salon.getPhoneStatus(), salon.isNumberRegistered());
+        OnboardingStage verification = phoneConnected
+                ? StageCalculator.verificationStage(salon.getBusinessVerificationStatus()) : null;
+        return new WhatsAppView(stage.name(), stage.label(), stage.tone().css(), stage.waitingOn().label(),
+                a.stalled(), humanDuration(a.timeInStage()),
+                a.threshold() == null ? null : humanDuration(a.threshold()),
+                NextActions.forStage(stage, salon),
+                salon.getSignupState().name(), NextActions.signupStepLabel(salon.getSignupAbandonedStep()),
+                salon.getSignupError(), connected, phoneConnected,
+                verification == null ? null : verificationLabel(verification),
+                verification == null ? null : verification.tone().css());
+    }
+
+    private static String verificationLabel(OnboardingStage stage) {
+        return switch (stage) {
+            case LIVE -> "Verified";
+            case VERIFICATION_NOT_STARTED -> "Not started";
+            case VERIFICATION_STARTED -> "Started, not submitted";
+            case VERIFICATION_IN_REVIEW -> "In review";
+            case VERIFICATION_NEEDS_INFO -> "Needs more info";
+            case VERIFICATION_FAILED -> "Rejected";
+            default -> "Unknown";
+        };
     }
 
     // Newest first; salons without features don't appear.

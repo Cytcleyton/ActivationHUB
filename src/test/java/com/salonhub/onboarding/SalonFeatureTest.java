@@ -90,7 +90,7 @@ class SalonFeatureTest extends ApiTestBase {
     }
 
     @Test
-    void deletingASalonAlsoDeletesItsFeatures() throws Exception {
+    void deletingASalonAlsoDeletesItsFeaturesAndHistory() throws Exception {
         long id = createSalon("Willow Hair Studio");
         addFeature(id, "BRANDED_APP");
 
@@ -99,5 +99,6 @@ class SalonFeatureTest extends ApiTestBase {
         mvc.perform(get("/api/salons/" + id)).andExpect(status().isNotFound());
         mvc.perform(get("/api/salons")).andExpect(jsonPath("$.salons", hasSize(0)));
         assertThat(features.count()).isZero();
+        assertThat(events.count()).isZero();
     }
 }

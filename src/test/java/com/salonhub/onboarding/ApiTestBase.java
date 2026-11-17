@@ -2,6 +2,7 @@ package com.salonhub.onboarding;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.salonhub.onboarding.domain.Salon;
+import com.salonhub.onboarding.repo.OnboardingEventRepository;
 import com.salonhub.onboarding.repo.SalonFeatureRepository;
 import com.salonhub.onboarding.repo.SalonRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,8 +39,12 @@ abstract class ApiTestBase {
     @Autowired
     SalonFeatureRepository features;
 
+    @Autowired
+    OnboardingEventRepository events;
+
     @BeforeEach
     void cleanDatabase() {
+        events.deleteAll();
         features.deleteAll();
         salons.deleteAll();
     }
