@@ -6,7 +6,6 @@ import com.salonhub.onboarding.domain.OnboardingEvent;
 import com.salonhub.onboarding.domain.OnboardingStage;
 import com.salonhub.onboarding.domain.Salon;
 import com.salonhub.onboarding.domain.SalonFeature;
-import com.salonhub.onboarding.domain.SignupState;
 import com.salonhub.onboarding.domain.StageCalculator;
 import com.salonhub.onboarding.domain.StallPolicy;
 import com.salonhub.onboarding.web.Dtos.EventView;
@@ -91,7 +90,7 @@ class SalonViews {
     private WhatsAppView whatsapp(Salon salon, Instant now) {
         OnboardingStage stage = salon.getStage();
         StallPolicy.Assessment a = stallPolicy.assess(stage, salon.getStageSince(), now);
-        boolean connected = salon.getSignupState() == SignupState.FINISHED && salon.hasToken() && salon.getWabaId() != null;
+        boolean connected = salon.isConnected();
         boolean phoneConnected = connected
                 && StageCalculator.isPhoneConnected(salon.getPhoneStatus(), salon.isNumberRegistered());
         OnboardingStage verification = phoneConnected

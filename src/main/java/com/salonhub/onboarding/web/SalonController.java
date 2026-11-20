@@ -3,10 +3,12 @@ package com.salonhub.onboarding.web;
 import com.salonhub.onboarding.domain.Salon;
 import com.salonhub.onboarding.domain.SalonFeature;
 import com.salonhub.onboarding.service.OnboardingService;
+import com.salonhub.onboarding.service.SignupSessionEvent;
 import com.salonhub.onboarding.web.Dtos.CreateSalonRequest;
 import com.salonhub.onboarding.web.Dtos.SalonDetail;
 import com.salonhub.onboarding.web.Dtos.SalonList;
 import com.salonhub.onboarding.web.Dtos.SalonSummary;
+import com.salonhub.onboarding.web.Dtos.SignupCodeRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,6 +62,31 @@ public class SalonController {
     @PostMapping("/{id}/features/{type}")
     public SalonDetail addFeature(@PathVariable long id, @PathVariable String type) {
         service.addFeature(id, type);
+        return detail(id);
+    }
+
+    // Called by the salon owner's view as Meta's signup pop-up opens and reports back.
+    @PostMapping("/{id}/signup/launched")
+    public SalonDetail signupLaunched(@PathVariable long id) {
+        service.signupLaunched(id);
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/signup/session")
+    public SalonDetail signupSession(@PathVariable long id, @RequestBody SignupSessionEvent event) {
+        service.signupSessionEvent(id, event);
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/signup/code")
+    public SalonDetail signupCode(@PathVariable long id, @RequestBody SignupCodeRequest request) {
+        service.signupCode(id, request.code());
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/register-number")
+    public SalonDetail registerNumber(@PathVariable long id) {
+        service.registerNumber(id);
         return detail(id);
     }
 

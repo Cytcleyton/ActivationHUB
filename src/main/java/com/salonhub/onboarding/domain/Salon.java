@@ -74,6 +74,11 @@ public class Salon {
         return accessToken != null && !accessToken.isBlank();
     }
 
+    // Finished Meta's signup and we hold the token and WhatsApp account ID.
+    public boolean isConnected() {
+        return getSignupState() == SignupState.FINISHED && hasToken() && wabaId != null;
+    }
+
     public StageCalculator.Inputs stageInputs() {
         return new StageCalculator.Inputs(getSignupState(), hasToken(), wabaId, isNumberRegistered(),
                 phoneStatus, businessVerificationStatus);

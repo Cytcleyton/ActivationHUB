@@ -8,11 +8,15 @@
     const sub = [salon.city, salon.contactName && `Contact: ${salon.contactName}`].filter(Boolean).join(' · ');
     content.innerHTML = `
       <div class="salon-head">
-        <h1>${escapeHtml(salon.name)} ${salon.demo ? '<span class="tag">DEMO</span>' : ''}</h1>
-        <div class="meta-line muted">${sub ? `${escapeHtml(sub)} · ` : ''}Added ${escapeHtml(formatDate(salon.createdAt))}</div>
+        <div>
+          <h1>${escapeHtml(salon.name)} ${salon.demo ? '<span class="tag">DEMO</span>' : ''}</h1>
+          <div class="meta-line muted">${sub ? `${escapeHtml(sub)} · ` : ''}Added ${escapeHtml(formatDate(salon.createdAt))}</div>
+        </div>
+        <a class="btn" href="/portal.html?id=${encodeURIComponent(salon.id)}" target="_blank" rel="noopener"
+           title="What the salon owner sees in their booking software">Salon's view ↗</a>
       </div>
       ${featuresCard(salon)}
-      ${salon.whatsapp ? whatsappSection(salon.whatsapp) : ''}
+      ${salon.whatsapp ? whatsappSection(salon.whatsapp, salon.demo) : ''}
       <section class="card card-pad">
         <div class="card-title"><h2>Activity</h2></div>
         ${activity(salon.events)}
@@ -50,7 +54,7 @@
       </section>`;
   }
 
-  function whatsappSection(w) {
+  function whatsappSection(w, demo) {
     const live = w.stage === 'LIVE';
     const inStage = live ? '' : (w.stalled
       ? `<span class="stalled-badge">Stalled · ${escapeHtml(w.timeInStage)} in this stage</span>`
@@ -69,7 +73,7 @@
       ${callout(w)}
       <section class="card card-pad">
         <div class="card-title"><h2>Onboarding steps</h2></div>
-        <ol class="steps">${steps(w)}</ol>
+        <ol class="steps">${steps(w, demo)}</ol>
       </section>`;
   }
 
@@ -91,7 +95,7 @@
       </div>`;
   }
 
-  function steps(w) {
+  function steps(w, demo) {
     let signupState = w.connected ? 'done' : 'current';
     let signupBody = 'The salon logs in with Facebook in Meta\'s pop-up, picks or creates a business portfolio and '
       + 'WhatsApp account, and verifies its phone number.';
@@ -118,6 +122,8 @@
       : (w.phoneConnected
         ? '<span class="pill done">Connected</span> Ready to send messages.'
         : '<span class="pill waiting">Pending registration</span> Meta allows 14 days after signup.');
+    const registerButton = w.connected && !w.phoneConnected && !demo
+      ? '<button class="primary" data-action="register-number">Register number</button>' : '';
 
     let verificationState = '';
     let verificationBody = 'The salon submits documents in Meta Business Suite; we can only watch the status.';
@@ -129,7 +135,7 @@
     const live = w.stage === 'LIVE';
     return [
       step(1, signupState, 'Salon connects WhatsApp through Meta', signupBody),
-      step(2, numberState, 'Register the phone number', numberBody),
+      step(2, numberState, 'Register the phone number', numberBody, registerButton),
       step(3, verificationState, 'Salon verifies their business with Meta', verificationBody),
       step(4, live ? 'done' : '', 'Live', live
         ? 'Verified and connected. Automated messages can go out from the salon\'s number.'
@@ -137,11 +143,12 @@
     ].join('');
   }
 
-  function step(n, state, title, body) {
+  function step(n, state, title, body, actions = '') {
     return `
       <li class="step ${state}">
         <span class="step-num">${state === 'done' ? '✓' : (state === 'problem' ? '!' : n)}</span>
         <div><div class="step-title">${title}</div><div class="step-body">${body}</div></div>
+        <div class="step-actions">${actions}</div>
       </li>`;
   }
 
@@ -167,6 +174,9 @@
         const salon = await busy(button, () =>
           api('POST', `/api/salons/${encodeURIComponent(salonId)}/features/${button.dataset.feature}`));
         render(salon);
+      } else if (button.dataset.action === 'register-number') {
+        render(await busy(button, () =>
+          api('POST', `/api/salons/${encodeURIComponent(salonId)}/register-number`)));
       } else if (button.dataset.action === 'delete-salon') {
         if (await confirmDialog('Delete salon?', 'Removes the salon and its history from this app.', 'Delete', true)) {
           await busy(button, () => api('DELETE', `/api/salons/${encodeURIComponent(salonId)}`));
@@ -176,6 +186,11 @@
     } catch (err) {
       toast(err.message, 'error');
     }
+  });
+
+  // The salon owner may have done something in the other tab: show the latest when coming back.
+  window.addEventListener('focus', () => {
+    if (salonId && !document.querySelector('dialog[open]')) load().catch(() => {});
   });
 
   if (!salonId) {

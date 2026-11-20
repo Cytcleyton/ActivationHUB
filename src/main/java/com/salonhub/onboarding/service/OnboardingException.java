@@ -17,6 +17,10 @@ public class OnboardingException extends RuntimeException {
         return new OnboardingException(404, message);
     }
 
+    public static OnboardingException conflict(String message) {
+        return new OnboardingException(409, message);
+    }
+
     public int getStatus() {
         return status;
     }

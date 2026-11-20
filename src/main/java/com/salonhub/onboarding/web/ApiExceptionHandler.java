@@ -1,5 +1,6 @@
 package com.salonhub.onboarding.web;
 
+import com.salonhub.onboarding.meta.MetaApiException;
 import com.salonhub.onboarding.service.OnboardingException;
 import com.salonhub.onboarding.web.Dtos.ErrorResponse;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(OnboardingException.class)
     public ResponseEntity<ErrorResponse> onboarding(OnboardingException e) {
         return error(e.getStatus(), e.getMessage());
+    }
+
+    // Meta's side failed, so 502 (bad gateway) rather than blaming the request.
+    @ExceptionHandler(MetaApiException.class)
+    public ResponseEntity<ErrorResponse> meta(MetaApiException e) {
+        return error(502, "Meta: " + e.summary());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

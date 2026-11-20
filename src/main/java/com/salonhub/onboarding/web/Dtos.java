@@ -11,6 +11,9 @@ public final class Dtos {
     public record CreateSalonRequest(String name) {
     }
 
+    public record SignupCodeRequest(String code) {
+    }
+
     // tone is one of: done, waiting, problem, neutral (matches the CSS pill classes)
     public record FeatureChip(String type, String label, String statusLabel, String statusTone) {
     }
