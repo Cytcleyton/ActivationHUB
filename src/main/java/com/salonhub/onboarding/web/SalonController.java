@@ -2,6 +2,7 @@ package com.salonhub.onboarding.web;
 
 import com.salonhub.onboarding.domain.Salon;
 import com.salonhub.onboarding.domain.SalonFeature;
+import com.salonhub.onboarding.meta.GraphApiMetaClient;
 import com.salonhub.onboarding.service.OnboardingService;
 import com.salonhub.onboarding.service.SignupSessionEvent;
 import com.salonhub.onboarding.web.Dtos.CreateSalonRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +82,18 @@ public class SalonController {
 
     @PostMapping("/{id}/signup/code")
     public SalonDetail signupCode(@PathVariable long id, @RequestBody SignupCodeRequest request) {
-        service.signupCode(id, request.code());
+        List<String> redirectUris = new ArrayList<>();
+        if (request.dialogRedirectUris() != null) {
+            redirectUris.addAll(request.dialogRedirectUris());
+        }
+        if (request.redirectUri() != null) {
+            redirectUris.add(request.redirectUri());
+            String root = GraphApiMetaClient.siteRoot(request.redirectUri());
+            if (root != null) {
+                redirectUris.add(root);
+            }
+        }
+        service.signupCode(id, request.code(), redirectUris);
         return detail(id);
     }
 

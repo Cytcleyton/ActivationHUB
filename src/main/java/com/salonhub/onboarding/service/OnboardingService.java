@@ -137,6 +137,8 @@ public class OnboardingService {
             throw OnboardingException.badRequest("Missing event.");
         }
         if (e.isFinish()) {
+            // With Meta's real pop-up the code can arrive first, in which case we may already be connected.
+            boolean wasConnected = salon.isConnected();
             salon.setSignupState(SignupState.FINISHED);
             salon.setSignupAbandonedStep(null);
             salon.setSignupError(null);
@@ -144,7 +146,9 @@ public class OnboardingService {
             if (notBlank(e.phoneNumberId())) salon.setPhoneNumberId(e.phoneNumberId());
             if (notBlank(e.businessId())) salon.setBusinessId(e.businessId());
             log(salon, Type.SIGNUP_FINISHED, "Salon finished Meta signup");
-            completeConnection(salon);
+            if (!wasConnected) {
+                completeConnection(salon);
+            }
         } else if (salon.getSignupState() == SignupState.FINISHED) {
             // Closing the pop-up on its last screen also sends a cancel; the signup still counts as finished.
             return;
@@ -164,7 +168,7 @@ public class OnboardingService {
     }
 
     // Meta's code expires 30 seconds after the pop-up closes, so it's exchanged straight away.
-    public void signupCode(long salonId, String code) {
+    public void signupCode(long salonId, String code, List<String> redirectUris) {
         Salon salon = salonThatCanConnect(salonId);
         if (code == null || code.isBlank()) {
             throw OnboardingException.badRequest("Missing code.");
@@ -174,7 +178,7 @@ public class OnboardingService {
         salon.setSignupAbandonedStep(null);
         salon.setSignupError(null);
         try {
-            salon.setAccessToken(meta.exchangeCodeForToken(code.trim()));
+            salon.setAccessToken(meta.exchangeCodeForToken(code.trim(), redirectUris));
         } catch (MetaApiException ex) {
             log(salon, Type.SIGNUP_ERROR, "Couldn't exchange Meta's code for the salon's token: " + ex.summary());
             updateStage(salon);
@@ -184,12 +188,23 @@ public class OnboardingService {
         updateStage(salon);
     }
 
-    // Runs once we have both the token and the WhatsApp account ID, whichever arrives last.
+    // Runs once we have the token. The WhatsApp account ID normally comes from the pop-up's message;
+    // if that hasn't arrived, Meta can tell us from the token.
     private void completeConnection(Salon salon) {
-        if (!salon.hasToken() || salon.getWabaId() == null) {
+        if (!salon.hasToken()) {
             return;
         }
         try {
+            if (salon.getWabaId() == null) {
+                MetaAssets found = meta.discoverAssets(salon.getAccessToken());
+                if (found.wabaId() == null) {
+                    return;
+                }
+                salon.setWabaId(found.wabaId());
+                if (salon.getPhoneNumberId() == null) salon.setPhoneNumberId(found.phoneNumberId());
+                if (salon.getBusinessId() == null) salon.setBusinessId(found.businessId());
+                log(salon, Type.STATUS_CHANGED, "Found the salon's WhatsApp account from Meta's token");
+            }
             meta.subscribeApp(salon.getWabaId(), salon.getAccessToken());
             log(salon, Type.STATUS_CHANGED, "Connected to the salon's WhatsApp account");
             readStatus(salon);

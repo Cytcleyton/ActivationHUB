@@ -11,7 +11,14 @@ public final class Dtos {
     public record CreateSalonRequest(String name) {
     }
 
-    public record SignupCodeRequest(String code) {
+    // redirectUri is the page that opened the pop-up; dialogRedirectUris are the addresses
+    // the browser saw Meta's dialog use. Meta only accepts the code with the same address.
+    public record SignupCodeRequest(String code, String redirectUri, List<String> dialogRedirectUris) {
+    }
+
+    // Only values that are safe in the browser: never the app secret or any token.
+    public record ConfigResponse(String mode, String appId, String configId, String graphVersion,
+                                 boolean liveSignupReady) {
     }
 
     // tone is one of: done, waiting, problem, neutral (matches the CSS pill classes)

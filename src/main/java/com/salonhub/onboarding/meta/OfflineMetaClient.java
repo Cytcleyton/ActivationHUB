@@ -1,5 +1,6 @@
 package com.salonhub.onboarding.meta;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,11 +14,22 @@ public class OfflineMetaClient implements MetaClient {
     private final Set<String> registeredNumbers = ConcurrentHashMap.newKeySet();
 
     @Override
-    public String exchangeCodeForToken(String code) {
+    public String mode() {
+        return "offline";
+    }
+
+    @Override
+    public String exchangeCodeForToken(String code, List<String> redirectUris) {
         if (code == null || !code.startsWith(CODE_PREFIX)) {
             throw new MetaApiException("Invalid or expired code (offline simulator)", 100);
         }
         return "offline-token-" + UUID.randomUUID();
+    }
+
+    @Override
+    public MetaAssets discoverAssets(String token) {
+        // The simulated pop-up always sends the IDs itself.
+        return new MetaAssets(null, null, null);
     }
 
     @Override

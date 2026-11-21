@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -138,6 +139,38 @@ class SignupTest extends ApiTestBase {
         mvc.perform(get("/api/salons/" + id))
                 .andExpect(jsonPath("$.whatsapp.stage").value("CONNECTION_INCOMPLETE"))
                 .andExpect(jsonPath("$.events[0].type").value("SIGNUP_ERROR"));
+    }
+
+    // Meta's real pop-up can deliver the code before its message with the IDs.
+    @Test
+    void codeCanArriveBeforeThePopUpsMessage() throws Exception {
+        long id = salonWithWhatsApp();
+        launched(id);
+        code(id, "offline-code-1")
+                .andExpect(jsonPath("$.whatsapp.connected").value(false))
+                .andExpect(jsonPath("$.whatsapp.stage").value("CONNECTION_INCOMPLETE"));
+
+        session(id, finish(id))
+                .andExpect(jsonPath("$.whatsapp.connected").value(true))
+                .andExpect(jsonPath("$.whatsapp.stage").value("NUMBER_PENDING"));
+    }
+
+    @Test
+    void aSecondFinishMessageDoesntConnectAgain() throws Exception {
+        long id = salonWithWhatsApp();
+        connect(id);
+        // Connecting logs two status changes: the connection and the first verification status.
+        session(id, finish(id))
+                .andExpect(jsonPath("$.events[?(@.type == 'STATUS_CHANGED')]", hasSize(2)));
+    }
+
+    @Test
+    void configHasOnlyWhatTheBrowserNeeds() throws Exception {
+        mvc.perform(get("/api/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode").value("offline"))
+                .andExpect(jsonPath("$.liveSignupReady").value(false))
+                .andExpect(jsonPath("$.appSecret").doesNotExist());
     }
 
     @Test

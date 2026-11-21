@@ -170,4 +170,5 @@
   load().catch((err) => {
     content.innerHTML = `<p class="muted">${escapeHtml(err.message)}</p>`;
   });
+  MetaSignup.prepare().catch((err) => toast(err.message, 'error'));
 })();
