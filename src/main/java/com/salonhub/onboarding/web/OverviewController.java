@@ -3,6 +3,7 @@ package com.salonhub.onboarding.web;
 import com.salonhub.onboarding.service.OnboardingService;
 import com.salonhub.onboarding.web.Dtos.Overview;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,5 +20,12 @@ public class OverviewController {
     @GetMapping("/api/overview")
     public Overview overview() {
         return views.overview(service.listSalons(), service.featuresBySalon());
+    }
+
+    // Checks every connected salon with Meta, then returns the overview.
+    @PostMapping("/api/overview/refresh")
+    public Overview refresh() {
+        service.refreshAll();
+        return overview();
     }
 }

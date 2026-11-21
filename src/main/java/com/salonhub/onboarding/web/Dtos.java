@@ -40,7 +40,8 @@ public final class Dtos {
                                boolean stalled, String timeInStage, String stalledAfter, String nextAction,
                                String signupState, String abandonedAt, String signupError,
                                boolean connected, boolean phoneConnected,
-                               String verificationLabel, String verificationTone) {
+                               String verificationLabel, String verificationTone,
+                               Instant lastCheckedAt, String lastCheckError) {
     }
 
     public record EventView(Instant at, String type, String detail) {

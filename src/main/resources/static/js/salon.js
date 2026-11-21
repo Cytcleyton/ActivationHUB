@@ -1,9 +1,12 @@
 (() => {
-  const { api, escapeHtml, formatDate, toast, busy, toneClass, confirmDialog, waitingText } = App;
+  const { api, escapeHtml, formatDate, timeAgo, toast, busy, toneClass, confirmDialog, waitingText, every } = App;
   const content = document.getElementById('content');
   const salonId = new URLSearchParams(window.location.search).get('id');
 
+  let current = null;
+
   function render(salon) {
+    current = salon;
     document.title = salon.name;
     const sub = [salon.city, salon.contactName && `Contact: ${salon.contactName}`].filter(Boolean).join(' · ');
     content.innerHTML = `
@@ -69,12 +72,37 @@
             ${inStage}
           </div>
         </div>
+        ${checkedWithMeta(w, demo)}
       </div>
+      ${checkError(w)}
       ${callout(w)}
       <section class="card card-pad">
         <div class="card-title"><h2>Onboarding steps</h2></div>
         <ol class="steps">${steps(w, demo)}</ol>
       </section>`;
+  }
+
+  // Connected salons are checked with Meta when the page opens and every minute after that.
+  function checkedWithMeta(w, demo) {
+    if (demo || !w.connected) return '';
+    return `
+      <div class="checked">
+        <span class="faint small">${w.lastCheckedAt ? `Checked with Meta ${escapeHtml(timeAgo(w.lastCheckedAt))}` : 'Not checked with Meta yet'}</span>
+        <button data-action="refresh">Check now</button>
+      </div>`;
+  }
+
+  function checkError(w) {
+    if (!w.lastCheckError) return '';
+    return `
+      <div class="callout problem">
+        <div>
+          <div class="callout-title">Couldn't check with Meta</div>
+          ${escapeHtml(w.lastCheckError)}
+          <div class="faint small">The statuses below are from the last check that worked. If the salon's token has
+            expired (Meta error 190), the salon needs to connect WhatsApp again.</div>
+        </div>
+      </div>`;
   }
 
   // What the team should do next; red when the salon has stalled.
@@ -165,6 +193,12 @@
     render(await api('GET', `/api/salons/${encodeURIComponent(salonId)}`));
   }
 
+  const checkable = (salon) => salon && !salon.demo && salon.whatsapp && salon.whatsapp.connected;
+
+  async function refresh() {
+    render(await api('POST', `/api/salons/${encodeURIComponent(salonId)}/refresh`));
+  }
+
   // One listener for all buttons, since the page is re-rendered after each change.
   content.addEventListener('click', async (e) => {
     const button = e.target.closest('button[data-action]');
@@ -174,6 +208,8 @@
         const salon = await busy(button, () =>
           api('POST', `/api/salons/${encodeURIComponent(salonId)}/features/${button.dataset.feature}`));
         render(salon);
+      } else if (button.dataset.action === 'refresh') {
+        await busy(button, refresh);
       } else if (button.dataset.action === 'register-number') {
         render(await busy(button, () =>
           api('POST', `/api/salons/${encodeURIComponent(salonId)}/register-number`)));
@@ -196,8 +232,11 @@
   if (!salonId) {
     content.innerHTML = '<p class="muted">No salon selected. Go back to <a href="/salons.html">Salons</a>.</p>';
   } else {
-    load().catch((err) => {
-      content.innerHTML = `<p class="muted">${escapeHtml(err.message)} Go back to <a href="/salons.html">Salons</a>.</p>`;
-    });
+    load()
+      .then(() => (checkable(current) ? refresh() : null))
+      .catch((err) => {
+        content.innerHTML = `<p class="muted">${escapeHtml(err.message)} Go back to <a href="/salons.html">Salons</a>.</p>`;
+      });
+    every(60000, () => { if (checkable(current)) refresh().catch(() => {}); });
   }
 })();

@@ -186,7 +186,8 @@ label { display: block; font-weight: 500; margin-bottom: 4px; }
 .chip { font-size: 12.5px; padding: 5px 11px; border-radius: 999px; }
 .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
-.section-head { margin: 28px 0 14px; }
+.section-head { margin: 28px 0 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.checked { display: flex; align-items: center; gap: 10px; }
 .section-head h2 { font-size: 18px; }
 .section-head .meta-line { margin-top: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 

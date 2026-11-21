@@ -97,6 +97,12 @@ public class SalonController {
         return detail(id);
     }
 
+    @PostMapping("/{id}/refresh")
+    public SalonDetail refresh(@PathVariable long id) {
+        service.refresh(id);
+        return detail(id);
+    }
+
     @PostMapping("/{id}/register-number")
     public SalonDetail registerNumber(@PathVariable long id) {
         service.registerNumber(id);

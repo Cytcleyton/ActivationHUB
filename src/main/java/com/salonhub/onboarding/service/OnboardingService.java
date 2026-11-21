@@ -231,10 +231,42 @@ public class OnboardingService {
         updateStage(salon);
     }
 
+    // Asks Meta for the latest statuses of every connected salon. Demo salons aren't connected to Meta.
+    public void refreshAll() {
+        for (Salon salon : salons.findAll()) {
+            if (canCheckWithMeta(salon)) {
+                readStatus(salon);
+                updateStage(salon);
+            }
+        }
+    }
+
+    public void refresh(long salonId) {
+        Salon salon = getSalon(salonId);
+        if (canCheckWithMeta(salon)) {
+            readStatus(salon);
+            updateStage(salon);
+        }
+    }
+
+    private static boolean canCheckWithMeta(Salon salon) {
+        return !salon.isDemo() && salon.isConnected();
+    }
+
+    // Logs whatever changed since the last check. A failed check is kept on the salon for the team
+    // to see (an expired token, say) rather than stopping the page.
     private void readStatus(Salon salon) {
-        MetaStatus status = meta.fetchStatus(
-                new MetaAssets(salon.getBusinessId(), salon.getWabaId(), salon.getPhoneNumberId()),
-                salon.getAccessToken());
+        salon.setLastCheckedAt(clock.instant());
+        MetaStatus status;
+        try {
+            status = meta.fetchStatus(
+                    new MetaAssets(salon.getBusinessId(), salon.getWabaId(), salon.getPhoneNumberId()),
+                    salon.getAccessToken());
+        } catch (MetaApiException ex) {
+            salon.setLastCheckError(ex.summary());
+            return;
+        }
+        salon.setLastCheckError(null);
         if (!Objects.equals(status.phoneStatus(), salon.getPhoneStatus()) && status.phoneStatus() != null) {
             log(salon, Type.STATUS_CHANGED, "Phone number: " + orDash(salon.getPhoneStatus()) + " → " + status.phoneStatus());
             salon.setPhoneStatus(status.phoneStatus());

@@ -1,5 +1,5 @@
 (() => {
-  const { api, escapeHtml, formatDate, toast, toneClass, waitingText } = App;
+  const { api, escapeHtml, formatDate, toast, toneClass, waitingText, every } = App;
 
   const FILTERS = [
     ['all', 'All'],
@@ -135,5 +135,14 @@
     if (row && !e.target.closest('a')) window.location.href = row.dataset.href;
   });
 
-  load().catch((err) => toast(err.message, 'error'));
+  // Show what we have straight away, then check connected salons with Meta and show that.
+  async function refresh() {
+    const data = await api('POST', '/api/overview/refresh');
+    state.rows = data.rows;
+    state.stats = data.stats;
+    render();
+  }
+
+  load().then(refresh).catch((err) => toast(err.message, 'error'));
+  every(60000, () => refresh().catch(() => {}));
 })();

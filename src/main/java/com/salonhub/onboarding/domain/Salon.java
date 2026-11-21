@@ -57,6 +57,11 @@ public class Salon {
     private String phoneStatus;
     private String businessVerificationStatus;
 
+    // When we last asked Meta for this salon's statuses, and what went wrong if that failed.
+    private Instant lastCheckedAt;
+    @Column(length = 1000)
+    private String lastCheckError;
+
     protected Salon() {
     }
 
@@ -117,4 +122,8 @@ public class Salon {
     public void setPhoneStatus(String phoneStatus) { this.phoneStatus = phoneStatus; }
     public String getBusinessVerificationStatus() { return businessVerificationStatus; }
     public void setBusinessVerificationStatus(String status) { this.businessVerificationStatus = status; }
+    public Instant getLastCheckedAt() { return lastCheckedAt; }
+    public void setLastCheckedAt(Instant lastCheckedAt) { this.lastCheckedAt = lastCheckedAt; }
+    public String getLastCheckError() { return lastCheckError; }
+    public void setLastCheckError(String lastCheckError) { this.lastCheckError = lastCheckError; }
 }

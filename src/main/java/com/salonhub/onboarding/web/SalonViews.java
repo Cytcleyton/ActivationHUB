@@ -102,7 +102,8 @@ class SalonViews {
                 salon.getSignupState().name(), NextActions.signupStepLabel(salon.getSignupAbandonedStep()),
                 salon.getSignupError(), connected, phoneConnected,
                 verification == null ? null : verificationLabel(verification),
-                verification == null ? null : verification.tone().css());
+                verification == null ? null : verification.tone().css(),
+                salon.getLastCheckedAt(), salon.getLastCheckError());
     }
 
     private static String verificationLabel(OnboardingStage stage) {

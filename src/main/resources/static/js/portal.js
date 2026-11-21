@@ -1,12 +1,19 @@
 // The salon owner's view (portal.html?id=N): connecting WhatsApp, in the salon's own words.
 (() => {
-  const { api, escapeHtml, toast, busy } = App;
+  const { api, escapeHtml, toast, busy, every } = App;
   const content = document.getElementById('content');
   const salonId = new URLSearchParams(window.location.search).get('id');
   let salon = null;
 
   async function load() {
     salon = await api('GET', `/api/salons/${encodeURIComponent(salonId)}`);
+    render();
+  }
+
+  // Connected salons: ask Meta for the latest, so the steps reflect what the salon did there.
+  async function refresh() {
+    if (!salon || salon.demo || !salon.whatsapp || !salon.whatsapp.connected) return;
+    salon = await api('POST', `/api/salons/${encodeURIComponent(salonId)}/refresh`);
     render();
   }
 
@@ -151,7 +158,7 @@
     if (button.dataset.action === 'connect') {
       MetaSignup.launch(salon.id, reload).catch((err) => toast(err.message, 'error'));
     } else if (button.dataset.action === 'refresh') {
-      busy(button, load).catch((err) => toast(err.message, 'error'));
+      busy(button, () => load().then(refresh)).catch((err) => toast(err.message, 'error'));
     }
   });
 
@@ -167,8 +174,9 @@
     if (salon && !document.querySelector('dialog[open]')) load().catch(() => {});
   });
 
-  load().catch((err) => {
+  load().then(refresh).catch((err) => {
     content.innerHTML = `<p class="muted">${escapeHtml(err.message)}</p>`;
   });
+  every(60000, () => refresh().catch(() => {}));
   MetaSignup.prepare().catch((err) => toast(err.message, 'error'));
 })();

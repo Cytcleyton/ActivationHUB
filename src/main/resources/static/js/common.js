@@ -33,6 +33,15 @@ const App = (() => {
     return iso ? dateFmt.format(new Date(iso)) : '—';
   }
 
+  // "just now", "5 min ago", "3 h ago", or the date for anything older.
+  function timeAgo(iso) {
+    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h ago`;
+    return formatDate(iso);
+  }
+
   function toast(message, kind = '') {
     let box = document.querySelector('.toasts');
     if (!box) {
@@ -89,5 +98,12 @@ const App = (() => {
     }
   }
 
-  return { api, escapeHtml, formatDate, toast, busy, toneClass, confirmDialog, waitingText };
+  // Runs task every intervalMs while the tab is visible, e.g. to keep statuses from Meta fresh.
+  function every(intervalMs, task) {
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !document.querySelector('dialog[open]')) task();
+    }, intervalMs);
+  }
+
+  return { api, escapeHtml, formatDate, timeAgo, toast, busy, toneClass, confirmDialog, waitingText, every };
 })();

@@ -65,6 +65,20 @@ abstract class ApiTestBase {
         return mvc.perform(post("/api/salons/" + salonId + "/features/" + type));
     }
 
+    // A new salon with WhatsApp reminders, connected through the simulated Meta pop-up.
+    // Its number isn't registered yet, so it waits in "Number not registered".
+    long connectedSalon(String name) throws Exception {
+        long id = createSalon(name);
+        addFeature(id, "WHATSAPP_REMINDERS");
+        mvc.perform(post("/api/salons/" + id + "/signup/launched"));
+        mvc.perform(post("/api/salons/" + id + "/signup/session").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"event\": \"FINISH\", \"wabaId\": \"sim-waba-%d\", \"phoneNumberId\": \"sim-phone-%d\", \"businessId\": \"sim-business-%d\"}"
+                        .formatted(id, id, id)));
+        mvc.perform(post("/api/salons/" + id + "/signup/code").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"code\": \"offline-code-" + id + "\"}")).andExpect(status().isOk());
+        return id;
+    }
+
     // Pretends the salon entered its current stage some time ago.
     void moveStageStartBack(long salonId, Duration by) {
         Salon salon = salons.findById(salonId).orElseThrow();
