@@ -2,8 +2,6 @@ package com.salonhub.onboarding.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,7 +14,8 @@ public class OnboardingEvent {
 
     public enum Type {
         SALON_CREATED, FEATURE_ADDED, STAGE_CHANGED, STATUS_CHANGED,
-        SIGNUP_LAUNCHED, SIGNUP_ABANDONED, SIGNUP_ERROR, SIGNUP_FINISHED, NUMBER_REGISTERED
+        SIGNUP_LAUNCHED, SIGNUP_ABANDONED, SIGNUP_ERROR, SIGNUP_FINISHED, NUMBER_REGISTERED,
+        VERIFICATION_OPENED, DEMO
     }
 
     @Id
@@ -29,9 +28,9 @@ public class OnboardingEvent {
     @Column(nullable = false)
     private Instant occurredAt;
 
-    @Enumerated(EnumType.STRING)
+    // Plain text rather than a database enum, so adding an event type doesn't need a database change.
     @Column(nullable = false, length = 40)
-    private Type type;
+    private String type;
 
     @Column(length = 1000)
     private String detail;
@@ -42,13 +41,14 @@ public class OnboardingEvent {
     public OnboardingEvent(Long salonId, Instant occurredAt, Type type, String detail) {
         this.salonId = salonId;
         this.occurredAt = occurredAt;
-        this.type = type;
+        this.type = type.name();
         this.detail = detail;
     }
 
     public Long getId() { return id; }
     public Long getSalonId() { return salonId; }
     public Instant getOccurredAt() { return occurredAt; }
-    public Type getType() { return type; }
+    public void setOccurredAt(Instant occurredAt) { this.occurredAt = occurredAt; }
+    public Type getType() { return Type.valueOf(type); }
     public String getDetail() { return detail; }
 }

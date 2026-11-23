@@ -20,7 +20,10 @@ import com.salonhub.onboarding.repo.SalonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -267,6 +270,7 @@ public class OnboardingService {
             return;
         }
         salon.setLastCheckError(null);
+        status = withSimulatedVerification(salon, status);
         if (!Objects.equals(status.phoneStatus(), salon.getPhoneStatus()) && status.phoneStatus() != null) {
             log(salon, Type.STATUS_CHANGED, "Phone number: " + orDash(salon.getPhoneStatus()) + " → " + status.phoneStatus());
             salon.setPhoneStatus(status.phoneStatus());
@@ -277,6 +281,109 @@ public class OnboardingService {
                     "Business verification: " + orDash(salon.getBusinessVerificationStatus()) + " → " + verification);
             salon.setBusinessVerificationStatus(verification);
         }
+    }
+
+    private static MetaStatus withSimulatedVerification(Salon salon, MetaStatus status) {
+        String simulated = salon.getSimulatedVerificationStatus();
+        return simulated == null ? status : new MetaStatus(status.phoneStatus(), simulated);
+    }
+
+    // The Meta Business Suite page where the salon verifies its business, opened for its portfolio.
+    public String openVerification(long salonId) {
+        Salon salon = getSalon(salonId);
+        if (salon.isDemo() || !salon.isConnected()) {
+            throw OnboardingException.conflict("The salon needs to connect WhatsApp before verifying its business.");
+        }
+        String url = metaProperties.getVerificationUrl();
+        if (salon.getBusinessId() != null) {
+            url += (url.contains("?") ? "&" : "?") + "business_id="
+                    + URLEncoder.encode(salon.getBusinessId(), StandardCharsets.UTF_8);
+        }
+        if (salon.getVerificationOpenedAt() == null) {
+            salon.setVerificationOpenedAt(clock.instant());
+        }
+        log(salon, Type.VERIFICATION_OPENED, "Salon opened Meta's business verification page");
+        updateStage(salon);
+        return url;
+    }
+
+    // --- Demo controls, for rehearsals and the demo itself ---
+
+    // Meta's business verification statuses offered in the demo controls.
+    public static final List<String> VERIFICATION_STATUSES = List.of(
+            "not_verified", "pending_submission", "pending", "pending_need_more_info", "verified", "rejected");
+    // Stops simulating, so a real salon's verification comes from Meta again.
+    public static final String USE_META = "meta";
+
+    // Demo salons aren't connected to Meta, so their status is simply set. For a real salon the
+    // chosen status replaces the one Meta reports until USE_META is chosen.
+    public void simulateVerification(long salonId, String status) {
+        Salon salon = getSalon(salonId);
+        String value = status == null ? "" : status.trim().toLowerCase();
+        if (!VERIFICATION_STATUSES.contains(value) && !(USE_META.equals(value) && !salon.isDemo())) {
+            throw OnboardingException.badRequest("Unknown verification status: " + status);
+        }
+        if (salon.isDemo()) {
+            setVerification(salon, value, " (demo)");
+            updateStage(salon);
+            return;
+        }
+        if (!salon.isConnected()) {
+            throw OnboardingException.conflict("Connect the salon's WhatsApp before simulating Meta's decision.");
+        }
+        if (USE_META.equals(value)) {
+            salon.setSimulatedVerificationStatus(null);
+            log(salon, Type.DEMO, "Stopped simulating: business verification comes from Meta again");
+        } else {
+            salon.setSimulatedVerificationStatus(value);
+            log(salon, Type.DEMO, "Simulating Meta's business verification decision: " + value);
+        }
+        readStatus(salon);
+        // If Meta couldn't be asked just now, the simulated decision still applies.
+        if (salon.getSimulatedVerificationStatus() != null) {
+            setVerification(salon, salon.getSimulatedVerificationStatus(), "");
+        }
+        updateStage(salon);
+    }
+
+    private void setVerification(Salon salon, String value, String note) {
+        if (!value.equals(salon.getBusinessVerificationStatus())) {
+            log(salon, Type.STATUS_CHANGED, "Business verification: "
+                    + orDash(salon.getBusinessVerificationStatus()) + " → " + value + note);
+            salon.setBusinessVerificationStatus(value);
+        }
+    }
+
+    public static final int MAX_SKIP_DAYS = 30;
+
+    // Makes it look as if the days had passed for this salon, by moving its whole history earlier.
+    // Shows a salon going stalled without waiting.
+    public void skipAhead(long salonId, int days) {
+        if (days < 1 || days > MAX_SKIP_DAYS) {
+            throw OnboardingException.badRequest("Skip between 1 and " + MAX_SKIP_DAYS + " days.");
+        }
+        Salon salon = getSalon(salonId);
+        Duration amount = Duration.ofDays(days);
+        salon.shiftEarlier(amount);
+        for (OnboardingEvent e : events.findBySalonIdOrderByOccurredAtDescIdDesc(salon.getId())) {
+            e.setOccurredAt(e.getOccurredAt().minus(amount));
+        }
+        for (SalonFeature f : features.findBySalonIdOrderByAddedAtAscIdAsc(salon.getId())) {
+            f.setAddedAt(f.getAddedAt().minus(amount));
+        }
+        String span = days == 1 ? "a day" : days + " days";
+        log(salon, Type.DEMO, "Skipped ahead " + span + ": everything above moved " + span + " earlier");
+    }
+
+    // Forgets the salon's Meta connection in this app, so the signup can be rehearsed again.
+    public void resetConnection(long salonId) {
+        Salon salon = getSalon(salonId);
+        if (salon.isDemo()) {
+            throw OnboardingException.badRequest("Demo salons have no Meta connection to reset.");
+        }
+        salon.resetMetaConnection();
+        log(salon, Type.DEMO, "Reset the Meta connection in this app (nothing was changed at Meta)");
+        updateStage(salon);
     }
 
     private Salon salonThatCanConnect(long salonId) {

@@ -16,6 +16,12 @@ public final class Dtos {
     public record SignupCodeRequest(String code, String redirectUri, List<String> dialogRedirectUris) {
     }
 
+    public record SimulateVerificationRequest(String status) {
+    }
+
+    public record SkipAheadRequest(int days) {
+    }
+
     // Only values that are safe in the browser: never the app secret or any token.
     public record ConfigResponse(String mode, String appId, String configId, String graphVersion,
                                  boolean liveSignupReady) {
@@ -41,7 +47,8 @@ public final class Dtos {
                                String signupState, String abandonedAt, String signupError,
                                boolean connected, boolean phoneConnected,
                                String verificationLabel, String verificationTone,
-                               Instant lastCheckedAt, String lastCheckError) {
+                               Instant lastCheckedAt, String lastCheckError,
+                               String simulatedVerification) {
     }
 
     public record EventView(Instant at, String type, String detail) {

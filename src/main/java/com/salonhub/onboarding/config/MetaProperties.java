@@ -18,6 +18,8 @@ public class MetaProperties {
     private String graphVersion = "v26.0";
     private String graphBaseUrl = "https://graph.facebook.com";
     private int timeoutSeconds = 15;
+    // Meta Business Suite's page for business verification; the salon's portfolio ID is added to it.
+    private String verificationUrl = "https://business.facebook.com/latest/settings/security_center";
     // Two-step verification PIN set on each salon's number when we register it.
     private String registrationPin = "246810";
 
@@ -44,6 +46,8 @@ public class MetaProperties {
     public void setGraphBaseUrl(String graphBaseUrl) { this.graphBaseUrl = graphBaseUrl; }
     public int getTimeoutSeconds() { return timeoutSeconds; }
     public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+    public String getVerificationUrl() { return verificationUrl; }
+    public void setVerificationUrl(String verificationUrl) { this.verificationUrl = verificationUrl; }
     public String getRegistrationPin() { return registrationPin; }
     public void setRegistrationPin(String registrationPin) { this.registrationPin = registrationPin; }
 }

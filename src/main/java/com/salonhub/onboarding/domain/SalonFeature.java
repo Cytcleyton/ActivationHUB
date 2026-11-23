@@ -40,4 +40,5 @@ public class SalonFeature {
     public Long getSalonId() { return salonId; }
     public FeatureType getType() { return type; }
     public Instant getAddedAt() { return addedAt; }
+    public void setAddedAt(Instant addedAt) { this.addedAt = addedAt; }
 }

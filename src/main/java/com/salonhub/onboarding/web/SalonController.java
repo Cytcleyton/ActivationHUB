@@ -10,7 +10,10 @@ import com.salonhub.onboarding.web.Dtos.SalonDetail;
 import com.salonhub.onboarding.web.Dtos.SalonList;
 import com.salonhub.onboarding.web.Dtos.SalonSummary;
 import com.salonhub.onboarding.web.Dtos.SignupCodeRequest;
+import com.salonhub.onboarding.web.Dtos.SimulateVerificationRequest;
+import com.salonhub.onboarding.web.Dtos.SkipAheadRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +104,30 @@ public class SalonController {
     @PostMapping("/{id}/refresh")
     public SalonDetail refresh(@PathVariable long id) {
         service.refresh(id);
+        return detail(id);
+    }
+
+    // Opened as a link from the salon's view: records it, then sends the browser on to Meta.
+    @GetMapping("/{id}/verify-on-meta")
+    public ResponseEntity<Void> verifyOnMeta(@PathVariable long id) {
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(service.openVerification(id))).build();
+    }
+
+    @PostMapping("/{id}/demo/verification")
+    public SalonDetail simulateVerification(@PathVariable long id, @RequestBody SimulateVerificationRequest request) {
+        service.simulateVerification(id, request.status());
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/demo/skip-ahead")
+    public SalonDetail skipAhead(@PathVariable long id, @RequestBody SkipAheadRequest request) {
+        service.skipAhead(id, request.days());
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/demo/reset")
+    public SalonDetail resetConnection(@PathVariable long id) {
+        service.resetConnection(id);
         return detail(id);
     }
 

@@ -188,6 +188,12 @@ label { display: block; font-weight: 500; margin-bottom: 4px; }
 
 .section-head { margin: 28px 0 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
 .checked { display: flex; align-items: center; gap: 10px; }
+.demo-controls { border-style: dashed; }
+.demo-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 0; border-top: 1px solid var(--border);
+}
+.demo-actions { display: flex; gap: 8px; align-items: center; }
 .section-head h2 { font-size: 18px; }
 .section-head .meta-line { margin-top: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 

@@ -11,12 +11,19 @@ public final class StageCalculator {
     private StageCalculator() {
     }
 
+    // verificationOpened: the salon has opened Meta's verification page from our app.
     public record Inputs(SignupState signupState,
                          boolean hasToken,
                          String wabaId,
                          boolean numberRegistered,
                          String phoneStatus,
-                         String businessVerificationStatus) {
+                         String businessVerificationStatus,
+                         boolean verificationOpened) {
+
+        public Inputs(SignupState signupState, boolean hasToken, String wabaId, boolean numberRegistered,
+                      String phoneStatus, String businessVerificationStatus) {
+            this(signupState, hasToken, wabaId, numberRegistered, phoneStatus, businessVerificationStatus, false);
+        }
     }
 
     public static OnboardingStage calculate(Inputs in) {
@@ -33,7 +40,7 @@ public final class StageCalculator {
         if (!isPhoneConnected(in.phoneStatus(), in.numberRegistered())) {
             return OnboardingStage.NUMBER_PENDING;
         }
-        return verificationStage(in.businessVerificationStatus());
+        return verificationStage(in.businessVerificationStatus(), in.verificationOpened());
     }
 
     public static boolean isPhoneConnected(String phoneStatus, boolean numberRegistered) {
@@ -44,8 +51,12 @@ public final class StageCalculator {
         return "CONNECTED".equalsIgnoreCase(phoneStatus.trim());
     }
 
-    // Maps Meta's business verification_status onto a stage.
     public static OnboardingStage verificationStage(String businessVerificationStatus) {
+        return verificationStage(businessVerificationStatus, false);
+    }
+
+    // Maps Meta's business verification_status onto a stage.
+    public static OnboardingStage verificationStage(String businessVerificationStatus, boolean opened) {
         if (isBlank(businessVerificationStatus)) {
             return OnboardingStage.VERIFICATION_UNKNOWN;
         }
@@ -58,7 +69,7 @@ public final class StageCalculator {
             case "pending" -> OnboardingStage.VERIFICATION_IN_REVIEW;
             case "pending_need_more_info" -> OnboardingStage.VERIFICATION_NEEDS_INFO;
             case "pending_submission" -> OnboardingStage.VERIFICATION_STARTED;
-            case "not_verified" -> OnboardingStage.VERIFICATION_NOT_STARTED;
+            case "not_verified" -> opened ? OnboardingStage.VERIFICATION_STARTED : OnboardingStage.VERIFICATION_NOT_STARTED;
             default -> OnboardingStage.VERIFICATION_UNKNOWN;
         };
     }

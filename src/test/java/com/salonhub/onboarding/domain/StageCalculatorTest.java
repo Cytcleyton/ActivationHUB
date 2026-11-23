@@ -66,6 +66,18 @@ class StageCalculatorTest {
         assertThat(StageCalculator.calculate(connected("CONNECTED", metaValue))).isEqualTo(expected);
     }
 
+    // Meta says not_verified until documents are submitted, so opening its page is what shows a start.
+    @Test
+    void openingMetasVerificationPageCountsAsStarted() {
+        StageCalculator.Inputs opened = new StageCalculator.Inputs(
+                SignupState.FINISHED, true, "waba-1", false, "CONNECTED", "not_verified", true);
+        assertThat(StageCalculator.calculate(opened)).isEqualTo(OnboardingStage.VERIFICATION_STARTED);
+
+        StageCalculator.Inputs openedThenSubmitted = new StageCalculator.Inputs(
+                SignupState.FINISHED, true, "waba-1", false, "CONNECTED", "pending", true);
+        assertThat(StageCalculator.calculate(openedThenSubmitted)).isEqualTo(OnboardingStage.VERIFICATION_IN_REVIEW);
+    }
+
     @Test
     void missingVerificationStatusIsUnknown() {
         assertThat(StageCalculator.calculate(connected("CONNECTED", null))).isEqualTo(OnboardingStage.VERIFICATION_UNKNOWN);

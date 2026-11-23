@@ -94,7 +94,8 @@ class SalonViews {
         boolean phoneConnected = connected
                 && StageCalculator.isPhoneConnected(salon.getPhoneStatus(), salon.isNumberRegistered());
         OnboardingStage verification = phoneConnected
-                ? StageCalculator.verificationStage(salon.getBusinessVerificationStatus()) : null;
+                ? StageCalculator.verificationStage(salon.getBusinessVerificationStatus(),
+                        salon.getVerificationOpenedAt() != null) : null;
         return new WhatsAppView(stage.name(), stage.label(), stage.tone().css(), stage.waitingOn().label(),
                 a.stalled(), humanDuration(a.timeInStage()),
                 a.threshold() == null ? null : humanDuration(a.threshold()),
@@ -103,7 +104,7 @@ class SalonViews {
                 salon.getSignupError(), connected, phoneConnected,
                 verification == null ? null : verificationLabel(verification),
                 verification == null ? null : verification.tone().css(),
-                salon.getLastCheckedAt(), salon.getLastCheckError());
+                salon.getLastCheckedAt(), salon.getLastCheckError(), salon.getSimulatedVerificationStatus());
     }
 
     private static String verificationLabel(OnboardingStage stage) {

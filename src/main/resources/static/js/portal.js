@@ -110,12 +110,18 @@
         : 'Your onboarding team is setting up your number. Nothing for you to do.');
 
     const [verificationState, verificationBody] = verification(w);
+    const verifyLabel = { VERIFICATION_NOT_STARTED: 'Verify on Meta', VERIFICATION_STARTED: 'Continue on Meta',
+                          VERIFICATION_NEEDS_INFO: 'Open Meta' }[w.stage];
+    // A plain link: the server records that the salon opened it, then sends the browser on to Meta.
+    const verifyButton = canAct && verifyLabel
+      ? `<a class="btn primary" href="/api/salons/${encodeURIComponent(salon.id)}/verify-on-meta" target="_blank"
+           rel="noopener">${verifyLabel} ↗</a>` : '';
 
     const live = w.stage === 'LIVE';
     return [
       step(1, state, 'Connect your WhatsApp', body, connectButton),
       step(2, numberState, 'We set up your number', numberBody),
-      step(3, verificationState, 'Verify your business with Meta', verificationBody),
+      step(3, verificationState, 'Verify your business with Meta', verificationBody, verifyButton),
       step(4, live ? 'done' : '', 'Start sending reminders', live
         ? 'All set. Booking reminders now go out on WhatsApp.'
         : 'Once the steps above are done, reminders go out automatically.')

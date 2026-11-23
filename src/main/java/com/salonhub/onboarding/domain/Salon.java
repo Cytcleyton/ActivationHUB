@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.time.Duration;
 import java.time.Instant;
 
 @Entity
@@ -62,6 +63,13 @@ public class Salon {
     @Column(length = 1000)
     private String lastCheckError;
 
+    // When the salon first opened Meta's verification page from its view. Meta still says
+    // not_verified until documents are submitted, so this is how we know they've started.
+    private Instant verificationOpenedAt;
+    // A business verification decision chosen in the demo controls, used instead of Meta's.
+    // Meta has no test mode for verification, so this is how later stages are rehearsed.
+    private String simulatedVerificationStatus;
+
     protected Salon() {
     }
 
@@ -86,7 +94,33 @@ public class Salon {
 
     public StageCalculator.Inputs stageInputs() {
         return new StageCalculator.Inputs(getSignupState(), hasToken(), wabaId, isNumberRegistered(),
-                phoneStatus, businessVerificationStatus);
+                phoneStatus, businessVerificationStatus, verificationOpenedAt != null);
+    }
+
+    // Demo control: as if this salon's history had happened some time earlier.
+    public void shiftEarlier(Duration amount) {
+        createdAt = createdAt.minus(amount);
+        if (stageSince != null) stageSince = stageSince.minus(amount);
+        if (lastCheckedAt != null) lastCheckedAt = lastCheckedAt.minus(amount);
+        if (verificationOpenedAt != null) verificationOpenedAt = verificationOpenedAt.minus(amount);
+    }
+
+    // Forgets everything learned from Meta, so the signup can be rehearsed again.
+    public void resetMetaConnection() {
+        signupState = SignupState.NOT_STARTED;
+        signupAbandonedStep = null;
+        signupError = null;
+        businessId = null;
+        wabaId = null;
+        phoneNumberId = null;
+        accessToken = null;
+        numberRegistered = false;
+        phoneStatus = null;
+        businessVerificationStatus = null;
+        lastCheckedAt = null;
+        lastCheckError = null;
+        verificationOpenedAt = null;
+        simulatedVerificationStatus = null;
     }
 
     public Long getId() { return id; }
@@ -126,4 +160,8 @@ public class Salon {
     public void setLastCheckedAt(Instant lastCheckedAt) { this.lastCheckedAt = lastCheckedAt; }
     public String getLastCheckError() { return lastCheckError; }
     public void setLastCheckError(String lastCheckError) { this.lastCheckError = lastCheckError; }
+    public Instant getVerificationOpenedAt() { return verificationOpenedAt; }
+    public void setVerificationOpenedAt(Instant verificationOpenedAt) { this.verificationOpenedAt = verificationOpenedAt; }
+    public String getSimulatedVerificationStatus() { return simulatedVerificationStatus; }
+    public void setSimulatedVerificationStatus(String status) { this.simulatedVerificationStatus = status; }
 }

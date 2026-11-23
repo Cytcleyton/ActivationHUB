@@ -20,6 +20,7 @@
       </div>
       ${featuresCard(salon)}
       ${salon.whatsapp ? whatsappSection(salon.whatsapp, salon.demo) : ''}
+      ${salon.whatsapp ? demoControls(salon) : ''}
       <section class="card card-pad">
         <div class="card-title"><h2>Activity</h2></div>
         ${activity(salon.events)}
@@ -103,6 +104,50 @@
             expired (Meta error 190), the salon needs to connect WhatsApp again.</div>
         </div>
       </div>`;
+  }
+
+  const DECISIONS = [
+    ['not_verified', 'Not started'], ['pending_submission', 'Started, not submitted'], ['pending', 'In review'],
+    ['pending_need_more_info', 'Needs more info'], ['verified', 'Verified'], ['rejected', 'Rejected']
+  ];
+
+  // For rehearsals and the demo: Meta has no test mode for business verification, and stalls take days.
+  function demoControls(salon) {
+    const w = salon.whatsapp;
+    const canDecide = salon.demo || w.connected;
+    const decisions = (salon.demo ? [] : [['meta', "Meta's real status"]]).concat(DECISIONS);
+    const simulating = DECISIONS.find(([value]) => value === w.simulatedVerification);
+    const canReset = !salon.demo && w.signupState !== 'NOT_STARTED';
+    return `
+      <section class="card card-pad demo-controls">
+        <div class="card-title">
+          <h2>Demo controls</h2>
+          ${simulating ? `<span class="pill waiting">Simulating Meta: ${escapeHtml(simulating[1])}</span>` : ''}
+        </div>
+        <div class="demo-row">
+          <div><strong>Meta's verification decision</strong>
+            <div class="faint small">${canDecide
+              ? (salon.demo ? 'Sets this demo salon\'s status.' : 'Used instead of what Meta reports, until you choose Meta\'s real status.')
+              : 'Available once the salon has connected WhatsApp.'}</div></div>
+          <div class="demo-actions">
+            <select data-decision aria-label="Meta's decision" ${canDecide ? '' : 'disabled'}>
+              ${decisions.map(([value, label]) => `<option value="${value}">${escapeHtml(label)}</option>`).join('')}
+            </select>
+            <button data-action="simulate" ${canDecide ? '' : 'disabled'}>Set</button>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div><strong>Skip ahead</strong>
+            <div class="faint small">Moves this salon's history a day earlier, to show it going stalled.</div></div>
+          <div class="demo-actions"><button data-action="skip-day">Skip 1 day</button></div>
+        </div>
+        ${canReset ? `
+        <div class="demo-row">
+          <div><strong>Reset Meta connection</strong>
+            <div class="faint small">Forgets the connection in this app so the signup can be rehearsed. Nothing changes at Meta.</div></div>
+          <div class="demo-actions"><button class="danger" data-action="reset">Reset</button></div>
+        </div>` : ''}
+      </section>`;
   }
 
   // What the team should do next; red when the salon has stalled.
@@ -208,6 +253,18 @@
         const salon = await busy(button, () =>
           api('POST', `/api/salons/${encodeURIComponent(salonId)}/features/${button.dataset.feature}`));
         render(salon);
+      } else if (button.dataset.action === 'simulate') {
+        const status = content.querySelector('[data-decision]').value;
+        render(await busy(button, () =>
+          api('POST', `/api/salons/${encodeURIComponent(salonId)}/demo/verification`, { status })));
+      } else if (button.dataset.action === 'skip-day') {
+        render(await busy(button, () =>
+          api('POST', `/api/salons/${encodeURIComponent(salonId)}/demo/skip-ahead`, { days: 1 })));
+      } else if (button.dataset.action === 'reset') {
+        if (await confirmDialog('Reset Meta connection?',
+          'The salon goes back to "Waiting for salon to connect" in this app. Nothing changes at Meta.', 'Reset', true)) {
+          render(await busy(button, () => api('POST', `/api/salons/${encodeURIComponent(salonId)}/demo/reset`)));
+        }
       } else if (button.dataset.action === 'refresh') {
         await busy(button, refresh);
       } else if (button.dataset.action === 'register-number') {
